@@ -57,7 +57,8 @@ export const spec = {
         slotType: bidRequest.params.slotType,
         adSlot: bidRequest.params.slot || bidRequest.adUnitCode,
         placementId: bidRequest.params.placementId || '',
-        site: bidRequest.params.site || bidderRequest.refererInfo.page
+        site: bidRequest.params.site || bidderRequest.refererInfo.page,
+        ref: bidderRequest.refererInfo.ref || bidderRequest.refererInfo.topmostLocation
       };
 
       return slot;
