@@ -200,7 +200,7 @@ function getUid(bidderRequest) {
     storage.removeDataFromLocalStorage(LEGACY_CONCERT_UID_KEY);
   }
 
-  if (!legacyUid && !uid) {
+  if (!uid) {
     uid = generateUUID();
     storage.setDataInLocalStorage(CONCERT_UID_KEY, uid);
   }
