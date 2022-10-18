@@ -188,11 +188,19 @@ function getUid(bidderRequest) {
     return false;
   }
 
-  const CONCERT_UID_KEY = 'c_uid';
+  const LEGACY_CONCERT_UID_KEY = 'c_uid';
+  const CONCERT_UID_KEY = 'vmconcert_uid';
 
+  const legacyUid = storage.getDataFromLocalStorage(LEGACY_CONCERT_UID_KEY);
   let uid = storage.getDataFromLocalStorage(CONCERT_UID_KEY);
 
-  if (!uid) {
+  if (legacyUid) {
+    uid = legacyUid;
+    storage.setDataInLocalStorage(CONCERT_UID_KEY, uid);
+    storage.removeDataFromLocalStorage(LEGACY_CONCERT_UID_KEY);
+  }
+
+  if (!legacyUid && !uid) {
     uid = generateUUID();
     storage.setDataInLocalStorage(CONCERT_UID_KEY, uid);
   }
