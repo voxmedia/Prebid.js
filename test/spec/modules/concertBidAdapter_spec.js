@@ -140,7 +140,6 @@ describe('ConcertAdapter', function () {
 
     it('should grab uid from local storage if it exists', function() {
       storage.setDataInLocalStorage('vmconcert_uid', 'foo');
-      console.log('GET', storage.getDataFromLocalStorage('vmconcert_uid'))
       storage.removeDataFromLocalStorage('c_nap');
       const request = spec.buildRequests(bidRequests, bidRequest);
       const payload = JSON.parse(request.data);
