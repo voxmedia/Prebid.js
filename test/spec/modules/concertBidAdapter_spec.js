@@ -143,7 +143,7 @@ describe('ConcertAdapter', function () {
       const request = spec.buildRequests(bidRequests, {
         ...bidRequest,
         userId: {
-          sharedid: {
+          _sharedid: {
             id: '123abc'
           }
         }

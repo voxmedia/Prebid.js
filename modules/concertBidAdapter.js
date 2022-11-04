@@ -188,7 +188,7 @@ function getUid(bidderRequest) {
     return false;
   }
 
-  const sharedId = deepAccess(bidderRequest, 'userId.sharedid.id');
+  const sharedId = deepAccess(bidderRequest, 'userId._sharedid.id');
 
   if (sharedId) {
     return sharedId;
