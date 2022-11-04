@@ -58,7 +58,7 @@ describe('ConcertAdapter', function () {
         page: 'https://www.google.com'
       },
       uspConsent: '1YYY',
-      gdprConsent: {},
+      gdprConsent: {}
     };
 
     bidResponse = {
