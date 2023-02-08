@@ -47,9 +47,17 @@ export const spec = {
         optedOut: hasOptedOutOfPersonalization(),
         adapterVersion: '1.1.1',
         uspConsent: bidderRequest.uspConsent,
-        gdprConsent: bidderRequest.gdprConsent
+        gdprConsent: bidderRequest.gdprConsent,
+        gppConsent: bidderRequest.gppConsent,
       }
     };
+
+    if (!payload.meta.gppConsent && bidderRequest.ortb2?.regs?.gpp) {
+      payload.meta.gppConsent = {
+        gppString: bidderRequest.ortb2.regs.gpp,
+        applicableSections: bidderRequest.ortb2.regs.gpp_sid
+      }
+    }
 
     payload.slots = validBidRequests.map(bidRequest => {
       collectEid(eids, bidRequest);
@@ -129,11 +137,12 @@ export const spec = {
    *
    * @param {SyncOptions} syncOptions Which user syncs are allowed?
    * @param {ServerResponse[]} serverResponses List of server's responses.
-   * @param {gdprConsent} object GDPR consent object.
-   * @param {uspConsent} string US Privacy String.
+   * @param {{consentString: string, gdprApplies: boolean}} gdprConsent GDPR consent object.
+   * @param {string} uspConsent US Privacy String.
+   * @param {{gppString: string}} gppConsent GPP consent object.
    * @return {UserSync[]} The user syncs which should be dropped.
    */
-  getUserSyncs: function(syncOptions, serverResponses, gdprConsent, uspConsent) {
+  getUserSyncs: function(syncOptions, serverResponses, gdprConsent, uspConsent, gppConsent) {
     const syncs = [];
     if (syncOptions.iframeEnabled && !hasOptedOutOfPersonalization()) {
       let params = [];
@@ -146,6 +155,9 @@ export const spec = {
       }
       if (uspConsent && (typeof uspConsent === 'string')) {
         params.push(`usp_consent=${uspConsent}`);
+      }
+      if (gppConsent && (typeof gppConsent.gppString === 'string')) {
+        params.push(`gpp_consent=${gppConsent.gppString}`);
       }
 
       syncs.push({
@@ -232,7 +244,7 @@ function consentAllowsPpid(bidderRequest) {
   /* NOTE: We can't easily test GDPR consent, without the
    * `consent-string` npm module; so will have to rely on that
    * happening on the bid-server. */
-  const uspConsent = !(bidderRequest?.uspConsent === 'string' &&
+  const uspConsent = !(typeof bidderRequest?.uspConsent === 'string' &&
     bidderRequest?.uspConsent[0] === '1' &&
     bidderRequest?.uspConsent[2].toUpperCase() === 'Y');
 
