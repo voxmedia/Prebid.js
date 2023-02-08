@@ -57,8 +57,9 @@ describe('ConcertAdapter', function () {
       refererInfo: {
         page: 'https://www.google.com'
       },
-      uspConsent: '1YYY',
-      gdprConsent: {}
+      uspConsent: '',
+      gdprConsent: {},
+      gppConsent: {}
     };
 
     bidResponse = {
@@ -111,7 +112,7 @@ describe('ConcertAdapter', function () {
       expect(payload).to.have.property('meta');
       expect(payload).to.have.property('slots');
 
-      const metaRequiredFields = ['prebidVersion', 'pageUrl', 'screen', 'debug', 'uid', 'optedOut', 'adapterVersion', 'uspConsent', 'gdprConsent'];
+      const metaRequiredFields = ['prebidVersion', 'pageUrl', 'screen', 'debug', 'uid', 'optedOut', 'adapterVersion', 'uspConsent', 'gdprConsent', 'gppConsent'];
       const slotsRequiredFields = ['name', 'bidId', 'transactionId', 'sizes', 'partnerId', 'slotType'];
 
       metaRequiredFields.forEach(function(field) {
@@ -219,7 +220,7 @@ describe('ConcertAdapter', function () {
       const opts = {
         iframeEnabled: false
       }
-      const sync = spec.getUserSyncs(opts, [], bidRequest.gdprConsent, bidRequest.uspConsent);
+      const sync = spec.getUserSyncs(opts, [], bidRequest.gdprConsent, bidRequest.uspConsent, bidRequest.gppConsent);
       expect(sync).to.have.lengthOf(0);
     });
 
@@ -229,7 +230,7 @@ describe('ConcertAdapter', function () {
       };
       storage.setDataInLocalStorage('c_nap', 'true');
 
-      const sync = spec.getUserSyncs(opts, [], bidRequest.gdprConsent, bidRequest.uspConsent);
+      const sync = spec.getUserSyncs(opts, [], bidRequest.gdprConsent, bidRequest.uspConsent, bidRequest.gppConsent);
       expect(sync).to.have.lengthOf(0);
     });
 
@@ -243,11 +244,11 @@ describe('ConcertAdapter', function () {
         gdprApplies: true
       };
 
-      const sync = spec.getUserSyncs(opts, [], bidRequest.gdprConsent, bidRequest.uspConsent);
+      const sync = spec.getUserSyncs(opts, [], bidRequest.gdprConsent, bidRequest.uspConsent, bidRequest.gppConsent);
       expect(sync[0].url).to.have.string('gdpr_applies=1');
     });
 
-    it('should set gdprApplies flag to 1 if the user is in area where GDPR applies', function() {
+    it('should set gdprApplies flag to 0 if the user is in area where GDPR does not apply', function() {
       const opts = {
         iframeEnabled: true
       };
@@ -257,7 +258,7 @@ describe('ConcertAdapter', function () {
         gdprApplies: false
       };
 
-      const sync = spec.getUserSyncs(opts, [], bidRequest.gdprConsent, bidRequest.uspConsent);
+      const sync = spec.getUserSyncs(opts, [], bidRequest.gdprConsent, bidRequest.uspConsent, bidRequest.gppConsent);
       expect(sync[0].url).to.have.string('gdpr_applies=0');
     });
 
@@ -272,7 +273,7 @@ describe('ConcertAdapter', function () {
         consentString: 'BOJ/P2HOJ/P2HABABMAAAAAZ+A=='
       };
 
-      const sync = spec.getUserSyncs(opts, [], bidRequest.gdprConsent, bidRequest.uspConsent);
+      const sync = spec.getUserSyncs(opts, [], bidRequest.gdprConsent, bidRequest.uspConsent, bidRequest.gppConsent);
       expect(sync[0].url).to.have.string('gdpr_consent=BOJ/P2HOJ/P2HABABMAAAAAZ+A==');
     });
 
@@ -284,11 +285,26 @@ describe('ConcertAdapter', function () {
 
       bidRequest.gdprConsent = {
         gdprApplies: false,
-        uspConsent: '1YYY'
       };
 
-      const sync = spec.getUserSyncs(opts, [], bidRequest.gdprConsent, bidRequest.uspConsent);
-      expect(sync[0].url).to.have.string('usp_consent=1YY');
+      bidRequest.uspConsent = '1YYY';
+
+      const sync = spec.getUserSyncs(opts, [], bidRequest.gdprConsent, bidRequest.uspConsent, bidRequest.gppConsent);
+      expect(sync[0].url).to.have.string('usp_consent=1YYY');
+    });
+
+    it('should set gpp consent param with the user\'s choices on consent', function() {
+      const opts = {
+        iframeEnabled: true
+      };
+      storage.removeDataFromLocalStorage('c_nap');
+
+      bidRequest.gppConsent = {
+        gppString: 'BOJ/P2HOJ/P2HABABMAAAAAZ+A==',
+      };
+
+      const sync = spec.getUserSyncs(opts, [], bidRequest.gdprConsent, bidRequest.uspConsent, bidRequest.gppConsent);
+      expect(sync[0].url).to.have.string('gpp_consent=BOJ/P2HOJ/P2HABABMAAAAAZ+A==');
     });
   });
 });
