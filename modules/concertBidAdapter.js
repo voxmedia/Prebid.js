@@ -5,7 +5,6 @@ import { hasPurpose1Consent } from '../src/utils/gpdr.js';
 
 const BIDDER_CODE = 'concert';
 const CONCERT_ENDPOINT = 'https://bids.concert.io';
-const USER_SYNC_URL = 'https://cdn.concert.io/lib/bids/sync.html';
 
 export const spec = {
   code: BIDDER_CODE,
@@ -130,42 +129,6 @@ export const spec = {
 
     logMessage(bidResponses);
     return bidResponses;
-  },
-
-  /**
-   * Register the user sync pixels which should be dropped after the auction.
-   *
-   * @param {SyncOptions} syncOptions Which user syncs are allowed?
-   * @param {ServerResponse[]} serverResponses List of server's responses.
-   * @param {{consentString: string, gdprApplies: boolean}} gdprConsent GDPR consent object.
-   * @param {string} uspConsent US Privacy String.
-   * @param {{gppString: string}} gppConsent GPP consent object.
-   * @return {UserSync[]} The user syncs which should be dropped.
-   */
-  getUserSyncs: function(syncOptions, serverResponses, gdprConsent, uspConsent, gppConsent) {
-    const syncs = [];
-    if (syncOptions.iframeEnabled && !hasOptedOutOfPersonalization()) {
-      let params = [];
-
-      if (gdprConsent && (typeof gdprConsent.gdprApplies === 'boolean')) {
-        params.push(`gdpr_applies=${gdprConsent.gdprApplies ? '1' : '0'}`);
-      }
-      if (gdprConsent && (typeof gdprConsent.consentString === 'string')) {
-        params.push(`gdpr_consent=${gdprConsent.consentString}`);
-      }
-      if (uspConsent && (typeof uspConsent === 'string')) {
-        params.push(`usp_consent=${uspConsent}`);
-      }
-      if (gppConsent && (typeof gppConsent.gppString === 'string')) {
-        params.push(`gpp_consent=${gppConsent.gppString}`);
-      }
-
-      syncs.push({
-        type: 'iframe',
-        url: USER_SYNC_URL + (params.length > 0 ? `?${params.join('&')}` : '')
-      });
-    }
-    return syncs;
   },
 
   /**
