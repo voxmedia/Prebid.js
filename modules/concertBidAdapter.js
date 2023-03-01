@@ -205,7 +205,7 @@ function hasOptedOutOfPersonalization() {
  */
 function consentAllowsPpid(bidderRequest) {
   /* NOTE: We can't easily test GDPR consent, without the
-   * `consent-string` npm module; so will have to rely on that
+   * `@iabtcf/core` npm module; so will have to rely on that
    * happening on the bid-server. */
   const uspConsent = !(typeof bidderRequest?.uspConsent === 'string' &&
     bidderRequest?.uspConsent[0] === '1' &&
