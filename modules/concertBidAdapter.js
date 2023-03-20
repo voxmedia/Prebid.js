@@ -210,8 +210,8 @@ function consentAllowsPpid(bidderRequest) {
     bidderRequest?.uspConsent[2].toUpperCase() === 'N';
 
   /*
-   * true if the gdprConsent is null-y; or GDPR does not apply; or if purpose 1 consent was given.
-   * much more nuanced GDPR requirements are tested on the bid server using the @iabtcf/core npm module;
+   * True if the gdprConsent is null-y; or GDPR does not apply; or if purpose 1 consent was given.
+   * Much more nuanced GDPR requirements are tested on the bid server using the @iabtcf/core npm module;
    */
   const gdprConsent = hasPurpose1Consent(bidderRequest?.gdprConsent);
 
