@@ -204,7 +204,7 @@ function hasOptedOutOfPersonalization() {
  * @param {BidderRequest} bidderRequest Object which contains any data consent signals
  */
 function consentAllowsPpid(bidderRequest) {
-  const uspConsent =
+  const uspConsentAllows =
     typeof bidderRequest?.uspConsent === 'string' &&
     bidderRequest?.uspConsent[0] === '1' &&
     bidderRequest?.uspConsent[2].toUpperCase() === 'N';
@@ -213,9 +213,9 @@ function consentAllowsPpid(bidderRequest) {
    * True if the gdprConsent is null-y; or GDPR does not apply; or if purpose 1 consent was given.
    * Much more nuanced GDPR requirements are tested on the bid server using the @iabtcf/core npm module;
    */
-  const gdprConsent = hasPurpose1Consent(bidderRequest?.gdprConsent);
+  const gdprConsentAllows = hasPurpose1Consent(bidderRequest?.gdprConsent);
 
-  return (uspConsent && gdprConsent);
+  return (uspConsentAllows && gdprConsentAllows);
 }
 
 function collectEid(eids, bid) {
