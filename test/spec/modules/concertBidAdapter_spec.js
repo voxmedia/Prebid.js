@@ -57,7 +57,7 @@ describe('ConcertAdapter', function () {
       refererInfo: {
         page: 'https://www.google.com'
       },
-      uspConsent: '',
+      uspConsent: '1YN-',
       gdprConsent: {},
       gppConsent: {}
     };
@@ -137,6 +137,14 @@ describe('ConcertAdapter', function () {
       const payload = JSON.parse(request.data);
 
       expect(payload.meta.uid).to.not.equal(false);
+    });
+
+    it('should not generate uid if USP consent disallows', function() {
+      storage.removeDataFromLocalStorage('c_nap');
+      const request = spec.buildRequests(bidRequests, { ...bidRequest, uspConsent: '1YY' });
+      const payload = JSON.parse(request.data);
+
+      expect(payload.meta.uid).to.equal(false);
     });
 
     it('should use sharedid if it exists', function() {
