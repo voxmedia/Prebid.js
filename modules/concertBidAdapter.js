@@ -267,8 +267,8 @@ function getOffset(el) {
 
 function getTdid(bidderRequest, validBidRequests) {
   if (hasOptedOutOfPersonalization() || !consentAllowsPpid(bidderRequest)) {
-    return;
+    return null;
   }
 
-  return deepAccess(validBidRequests[0], 'userId.tdid');
+  return deepAccess(validBidRequests[0], 'userId.tdid') || null;
 }
