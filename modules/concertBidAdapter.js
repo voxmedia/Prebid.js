@@ -57,6 +57,7 @@ export const spec = {
         gdprConsent: bidderRequest.gdprConsent,
         gppConsent: bidderRequest.gppConsent,
         tdid: getTdid(bidderRequest, validBidRequests),
+        schain: getSchain(validBidRequests),
       }
     };
 
@@ -278,4 +279,8 @@ function getTdid(bidderRequest, validBidRequests) {
   }
 
   return deepAccess(validBidRequests[0], 'userId.tdid') || null;
+}
+
+function getSchain(validBidRequests) {
+  return deepAccess(validBidRequests[0], 'schain') || null;
 }
