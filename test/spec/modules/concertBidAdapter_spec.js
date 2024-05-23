@@ -249,6 +249,16 @@ describe('ConcertAdapter', function () {
       });
     });
 
+    it('should include dealId when present in bidResponse', function() {
+      const bids = spec.interpretResponse({ ...bidResponse, dealid: 'CON-123' }, bidRequest);
+      expect(bids).to.have.property('dealId');
+    });
+
+    it('should exclude dealId when absent in bidResponse', function() {
+      const bids = spec.interpretResponse(bidResponse, bidRequest);
+      expect(bids).to.not.have.property('dealId');
+    });
+
     it('should return empty bids if there is no response from server', function() {
       const bids = spec.interpretResponse({ body: null }, bidRequest);
       expect(bids).to.have.lengthOf(0);
