@@ -250,7 +250,13 @@ describe('ConcertAdapter', function () {
     });
 
     it('should include dealId when present in bidResponse', function() {
-      const bids = spec.interpretResponse({ ...bidResponse, dealid: 'CON-123' }, bidRequest);
+      const bids = spec.interpretResponse({
+        body: {
+          bids: [
+            { ...bidResponse.body.bids[0], dealid: 'CON-123' }
+          ]
+        }
+      }, bidRequest);
       expect(bids[0]).to.have.property('dealId');
     });
 
