@@ -174,30 +174,19 @@ function getUid(bidderRequest, validBidRequests) {
     return false;
   }
 
-  /**
-   * check for shareId or pubCommonId before generating a new one
-   * sharedId: @see https://docs.prebid.org/dev-docs/modules/userId.html
-   * pubCid (no longer supported): @see https://docs.prebid.org/dev-docs/modules/pubCommonId.html#adapter-integration
-   */
-  const sharedId =
-    deepAccess(validBidRequests[0], 'userId.sharedid.id') ||
-    deepAccess(validBidRequests[0], 'userId.pubcid')
-  const pubCid = deepAccess(validBidRequests[0], 'crumbs.pubcid');
+  // First check for user IDs from supported ID systems
+  const userIds = getUserIdsFromEids(validBidRequests[0]);
 
-  if (sharedId) return sharedId;
+  if (userIds.sharedId) return userIds.sharedId;
+  if (userIds.pubcId) return userIds.pubcId;
+
+  // Fallback to stored/generated UID if no shared IDs available
+  const pubCid = deepAccess(validBidRequests[0], 'crumbs.pubcid');
   if (pubCid) return pubCid;
 
-  const LEGACY_CONCERT_UID_KEY = 'c_uid';
   const CONCERT_UID_KEY = 'vmconcert_uid';
 
-  const legacyUid = storage.getDataFromLocalStorage(LEGACY_CONCERT_UID_KEY);
   let uid = storage.getDataFromLocalStorage(CONCERT_UID_KEY);
-
-  if (legacyUid) {
-    uid = legacyUid;
-    storage.setDataInLocalStorage(CONCERT_UID_KEY, uid);
-    storage.removeDataFromLocalStorage(LEGACY_CONCERT_UID_KEY);
-  }
 
   if (!uid) {
     uid = generateUUID();
@@ -205,6 +194,41 @@ function getUid(bidderRequest, validBidRequests) {
   }
 
   return uid;
+}
+
+/**
+ * Extract user IDs from the standardized userIdAsEids structure
+ *
+ * @param {object} bid - The bid object containing userIdAsEids
+ * @returns {object} Object with extracted IDs by type
+ */
+function getUserIdsFromEids(bid) {
+  const userIds = {
+    sharedId: null,
+    pubcId: null,
+    tdid: null,
+    uid2: null
+  };
+
+  if (!bid || !bid.userIdAsEids || !Array.isArray(bid.userIdAsEids)) {
+    return userIds;
+  }
+
+  // Map of sources to our internal property names
+  const sourceMapping = {
+    'sharedid.org': 'sharedId',
+    'pubcid.org': 'pubcId',
+    'adserver.org': 'tdid',
+    'uidapi.com': 'uid2'
+  };
+
+  bid.userIdAsEids.forEach(eid => {
+    if (eid.source && sourceMapping[eid.source] && eid.uids && eid.uids.length > 0 && eid.uids[0].id) {
+      userIds[sourceMapping[eid.source]] = eid.uids[0].id;
+    }
+  });
+
+  return userIds;
 }
 
 /**
@@ -243,24 +267,8 @@ function consentAllowsPpid(bidderRequest) {
 }
 
 function collectEid(eids, bid) {
-  if (bid.userId) {
-    const eid = getUserId(bid.userId.uid2 && bid.userId.uid2.id, 'uidapi.com', undefined, 3)
-    eids.push(eid)
-  }
-}
-
-function getUserId(id, source, uidExt, atype) {
-  if (id) {
-    const uid = { id, atype };
-
-    if (uidExt) {
-      uid.ext = uidExt;
-    }
-
-    return {
-      source,
-      uids: [ uid ]
-    };
+  if (bid.userIdAsEids && Array.isArray(bid.userIdAsEids) && bid.userIdAsEids.length > 0) {
+    eids.push(...bid.userIdAsEids);
   }
 }
 
@@ -279,5 +287,6 @@ function getTdid(bidderRequest, validBidRequests) {
     return null;
   }
 
-  return deepAccess(validBidRequests[0], 'userId.tdid') || null;
+  const userIds = getUserIdsFromEids(validBidRequests[0]);
+  return userIds.tdid;
 }
