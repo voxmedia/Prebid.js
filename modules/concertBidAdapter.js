@@ -1,8 +1,8 @@
-import { logWarn, logMessage, debugTurnedOn, generateUUID, deepAccess } from "../src/utils.js";
-import { registerBidder } from "../src/adapters/bidderFactory.js";
-import { getStorageManager } from "../src/storageManager.js";
-import { hasPurpose1Consent } from "../src/utils/gdpr.js";
-import { getBoundingClientRect } from "../libraries/boundingClientRect/boundingClientRect.js";
+import { logWarn, logMessage, debugTurnedOn, generateUUID, deepAccess } from '../src/utils.js';
+import { registerBidder } from '../src/adapters/bidderFactory.js';
+import { getStorageManager } from '../src/storageManager.js';
+import { hasPurpose1Consent } from '../src/utils/gdpr.js';
+import { getBoundingClientRect } from '../libraries/boundingClientRect/boundingClientRect.js';
 
 /**
  * @typedef {import('../src/adapters/bidderFactory.js').BidRequest} BidRequest
@@ -11,8 +11,8 @@ import { getBoundingClientRect } from "../libraries/boundingClientRect/boundingC
  * @typedef {import('../src/adapters/bidderFactory.js').ServerRequest} ServerRequest
  */
 
-const BIDDER_CODE = "concert";
-const CONCERT_ENDPOINT = "https://bids.concert.io";
+const BIDDER_CODE = 'concert';
+const CONCERT_ENDPOINT = 'https://bids.concert.io';
 
 export const spec = {
   code: BIDDER_CODE,
@@ -23,7 +23,7 @@ export const spec = {
    */
   isBidRequestValid: function (bid) {
     if (!bid.params.partnerId) {
-      logWarn("Missing partnerId bid parameter");
+      logWarn('Missing partnerId bid parameter');
       return false;
     }
 
@@ -45,14 +45,14 @@ export const spec = {
 
     let payload = {
       meta: {
-        prebidVersion: "$prebid.version$",
+        prebidVersion: '$prebid.version$',
         pageUrl: bidderRequest.refererInfo.page,
-        screen: [window.screen.width, window.screen.height].join("x"),
+        screen: [window.screen.width, window.screen.height].join('x'),
         browserLanguage: window.navigator.language,
         debug: debugTurnedOn(),
         uid: getUid(bidderRequest, validBidRequests),
         optedOut: hasOptedOutOfPersonalization(),
-        adapterVersion: "1.2.0",
+        adapterVersion: '1.2.0',
         uspConsent: bidderRequest.uspConsent,
         gdprConsent: bidderRequest.gdprConsent,
         gppConsent: bidderRequest.gppConsent,
@@ -80,7 +80,7 @@ export const spec = {
         partnerId: bidRequest.params.partnerId,
         slotType: bidRequest.params.slotType,
         adSlot: bidRequest.params.slot || bidRequest.adUnitCode,
-        placementId: bidRequest.params.placementId || "",
+        placementId: bidRequest.params.placementId || '',
         site: bidRequest.params.site || bidderRequest.refererInfo.page,
         ref: bidderRequest.refererInfo.ref,
         offsetCoordinates: { x: coordinates?.left, y: coordinates?.top },
@@ -94,7 +94,7 @@ export const spec = {
     logMessage(payload);
 
     return {
-      method: "POST",
+      method: 'POST',
       url: `${CONCERT_ENDPOINT}/bids/prebid`,
       data: JSON.stringify(payload),
     };
@@ -111,7 +111,7 @@ export const spec = {
 
     const serverBody = serverResponse.body;
 
-    if (!serverBody || typeof serverBody !== "object") {
+    if (!serverBody || typeof serverBody !== 'object') {
       return [];
     }
 
@@ -145,7 +145,7 @@ export const spec = {
    * Register bidder specific code, which will execute if bidder timed out after an auction
    */
   onTimeout: function (data) {
-    logMessage("concert bidder timed out");
+    logMessage('concert bidder timed out');
     logMessage(data);
   },
 
@@ -154,7 +154,7 @@ export const spec = {
    * @param {Bid} bid The bid that won the auction
    */
   onBidWon: function (bid) {
-    logMessage("concert bidder won bid");
+    logMessage('concert bidder won bid');
     logMessage(bid);
   },
 };
@@ -175,11 +175,11 @@ function getUid(bidderRequest, validBidRequests) {
 
   if (sharedId) return sharedId;
   if (pubcId) return pubcId;
-  if (deepAccess(validBidRequests[0], "crumbs.pubcid")) {
-    return deepAccess(validBidRequests[0], "crumbs.pubcid");
+  if (deepAccess(validBidRequests[0], 'crumbs.pubcid')) {
+    return deepAccess(validBidRequests[0], 'crumbs.pubcid');
   }
 
-  const CONCERT_UID_KEY = "vmconcert_uid";
+  const CONCERT_UID_KEY = 'vmconcert_uid';
   let uid = storage.getDataFromLocalStorage(CONCERT_UID_KEY);
 
   if (!uid) {
@@ -192,9 +192,9 @@ function getUid(bidderRequest, validBidRequests) {
 
 function getUserIdsFromEids(bid) {
   const sourceMapping = {
-    "sharedid.org": "sharedId",
-    "pubcid.org": "pubcId",
-    "adserver.org": "tdid",
+    'sharedid.org': 'sharedId',
+    'pubcid.org': 'pubcId',
+    'adserver.org': 'tdid',
   };
 
   const defaultUserIds = { sharedId: null, pubcId: null, tdid: null };
@@ -214,10 +214,10 @@ function getUserIdsFromEids(bid) {
  * Whether the user has opted out of personalization.
  */
 function hasOptedOutOfPersonalization() {
-  const CONCERT_NO_PERSONALIZATION_KEY = "c_nap";
+  const CONCERT_NO_PERSONALIZATION_KEY = 'c_nap';
 
   return (
-    storage.getDataFromLocalStorage(CONCERT_NO_PERSONALIZATION_KEY) === "true"
+    storage.getDataFromLocalStorage(CONCERT_NO_PERSONALIZATION_KEY) === 'true'
   );
 }
 
@@ -231,9 +231,9 @@ function consentAllowsPpid(bidderRequest) {
 
   // if a us privacy string was provided, but they explicitly opted out
   if (
-    typeof bidderRequest?.uspConsent === "string" &&
-    bidderRequest?.uspConsent[0] === "1" &&
-    bidderRequest?.uspConsent[2].toUpperCase() === "Y" // user has opted-out
+    typeof bidderRequest?.uspConsent === 'string' &&
+    bidderRequest?.uspConsent[0] === '1' &&
+    bidderRequest?.uspConsent[2].toUpperCase() === 'Y' // user has opted-out
   ) {
     uspConsentAllows = false;
   }
