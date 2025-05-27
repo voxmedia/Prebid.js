@@ -69,7 +69,7 @@ export const spec = {
     }
 
     payload.slots = validBidRequests.map(bidRequest => {
-      eids.push(...(bid.userIdAsEids || []));
+      eids.push(...(bidRequest.userIdAsEids || []));
       const adUnitElement = document.getElementById(bidRequest.adUnitCode);
       const coordinates = getOffset(adUnitElement);
 
