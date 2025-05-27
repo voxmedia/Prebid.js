@@ -237,6 +237,31 @@ describe('ConcertAdapter', function () {
       const payload = JSON.parse(request.data);
       expect(payload.meta.tdid).to.equal(tdid);
     });
+
+    it('should return null if schain object is not present', function () {
+      const request = spec.buildRequests(bidRequests, bidRequest);
+      const payload = JSON.parse(request.data);
+      expect(payload.meta.schain).to.be.null;
+    });
+
+    it('should pass along schain object if present', function () {
+      const schain = {
+        ver: "1.0",
+        complete: 1,
+        nodes: [
+          {
+            asi: "directseller.com",
+            sid: "00001",
+            rid: "BidRequest1",
+            hp: 1,
+          },
+        ],
+      };
+      const bidRequestsWithSchain = [{ ...bidRequests[0], schain }]
+      const request = spec.buildRequests(bidRequestsWithSchain, bidRequest);
+      const payload = JSON.parse(request.data);
+      expect(payload.meta.schain).to.deep.equal(schain);
+    });
   });
 
   describe('spec.interpretResponse', function() {
