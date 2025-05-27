@@ -69,7 +69,7 @@ export const spec = {
     }
 
     payload.slots = validBidRequests.map(bidRequest => {
-      collectEid(eids, bidRequest);
+      if (Array.isArray(bidRequest.userIdAsEids) && bidRequest.userIdAsEids !== 0) eids.push(bidRequest.userIdAsEids)
       const adUnitElement = document.getElementById(bidRequest.adUnitCode)
       const coordinates = getOffset(adUnitElement)
 
@@ -90,7 +90,7 @@ export const spec = {
       return slot;
     });
 
-    payload.meta.eids = eids.filter(Boolean);
+    payload.meta.eids = eids;
 
     logMessage(payload);
 
@@ -174,6 +174,8 @@ function getUid(bidderRequest, validBidRequests) {
     return false;
   }
 
+  const eids = validBidRequests[0].userIdAsEids;
+
   /**
    * check for shareId or pubCommonId before generating a new one
    * sharedId: @see https://docs.prebid.org/dev-docs/modules/userId.html
@@ -205,6 +207,10 @@ function getUid(bidderRequest, validBidRequests) {
   }
 
   return uid;
+}
+
+function getUidFromEids() {
+
 }
 
 /**
@@ -240,28 +246,6 @@ function consentAllowsPpid(bidderRequest) {
   const gdprConsentAllows = hasPurpose1Consent(bidderRequest?.gdprConsent);
 
   return (uspConsentAllows && gdprConsentAllows);
-}
-
-function collectEid(eids, bid) {
-  if (bid.userId) {
-    const eid = getUserId(bid.userId.uid2 && bid.userId.uid2.id, 'uidapi.com', undefined, 3)
-    eids.push(eid)
-  }
-}
-
-function getUserId(id, source, uidExt, atype) {
-  if (id) {
-    const uid = { id, atype };
-
-    if (uidExt) {
-      uid.ext = uidExt;
-    }
-
-    return {
-      source,
-      uids: [ uid ]
-    };
-  }
 }
 
 function getOffset(el) {
