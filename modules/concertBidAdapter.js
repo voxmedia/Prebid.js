@@ -65,13 +65,13 @@ export const spec = {
       payload.meta.gppConsent = {
         gppString: bidderRequest.ortb2.regs.gpp,
         applicableSections: bidderRequest.ortb2.regs.gpp_sid
-      }
+      };
     }
 
     payload.slots = validBidRequests.map(bidRequest => {
-      if (Array.isArray(bidRequest.userIdAsEids) && bidRequest.userIdAsEids !== 0) eids.push(bidRequest.userIdAsEids)
-      const adUnitElement = document.getElementById(bidRequest.adUnitCode)
-      const coordinates = getOffset(adUnitElement)
+      eids.push(...(bid.userIdAsEids || []));
+      const adUnitElement = document.getElementById(bidRequest.adUnitCode);
+      const coordinates = getOffset(adUnitElement);
 
       let slot = {
         name: bidRequest.adUnitCode,
@@ -85,12 +85,12 @@ export const spec = {
         site: bidRequest.params.site || bidderRequest.refererInfo.page,
         ref: bidderRequest.refererInfo.ref,
         offsetCoordinates: { x: coordinates?.left, y: coordinates?.top }
-      }
+      };
 
       return slot;
     });
 
-    payload.meta.eids = eids;
+    payload.meta.eids = eids.filter(Boolean);
 
     logMessage(payload);
 
@@ -174,32 +174,16 @@ function getUid(bidderRequest, validBidRequests) {
     return false;
   }
 
-  const eids = validBidRequests[0].userIdAsEids;
-
-  /**
-   * check for shareId or pubCommonId before generating a new one
-   * sharedId: @see https://docs.prebid.org/dev-docs/modules/userId.html
-   * pubCid (no longer supported): @see https://docs.prebid.org/dev-docs/modules/pubCommonId.html#adapter-integration
-   */
-  const sharedId =
-    deepAccess(validBidRequests[0], 'userId.sharedid.id') ||
-    deepAccess(validBidRequests[0], 'userId.pubcid')
-  const pubCid = deepAccess(validBidRequests[0], 'crumbs.pubcid');
+  const { sharedId, pubcId } = getUserIdsFromEids(validBidRequests[0]);
 
   if (sharedId) return sharedId;
-  if (pubCid) return pubCid;
-
-  const LEGACY_CONCERT_UID_KEY = 'c_uid';
-  const CONCERT_UID_KEY = 'vmconcert_uid';
-
-  const legacyUid = storage.getDataFromLocalStorage(LEGACY_CONCERT_UID_KEY);
-  let uid = storage.getDataFromLocalStorage(CONCERT_UID_KEY);
-
-  if (legacyUid) {
-    uid = legacyUid;
-    storage.setDataInLocalStorage(CONCERT_UID_KEY, uid);
-    storage.removeDataFromLocalStorage(LEGACY_CONCERT_UID_KEY);
+  if (pubcId) return pubcId;
+  if (deepAccess(validBidRequests[0], 'crumbs.pubcid')) {
+    return deepAccess(validBidRequests[0], 'crumbs.pubcid');
   }
+
+  const CONCERT_UID_KEY = 'vmconcert_uid';
+  let uid = storage.getDataFromLocalStorage(CONCERT_UID_KEY);
 
   if (!uid) {
     uid = generateUUID();
@@ -209,8 +193,24 @@ function getUid(bidderRequest, validBidRequests) {
   return uid;
 }
 
-function getUidFromEids() {
+function getUserIdsFromEids(bid) {
+  const sourceMapping = {
+    'sharedid.org': 'sharedId',
+    'pubcid.org': 'pubcId',
+    'adserver.org': 'tdid',
+  };
 
+  const defaultUserIds = { sharedId: null, pubcId: null, tdid: null };
+
+  if (!bid?.userIdAsEids) return defaultUserIds;
+
+  return bid.userIdAsEids.reduce((userIds, eid) => {
+    const key = sourceMapping[eid.source];
+    if (key && eid.uids?.[0]?.id) {
+      userIds[key] = eid.uids[0].id;
+    }
+    return userIds;
+  }, defaultUserIds);
 }
 
 /**
@@ -263,5 +263,5 @@ function getTdid(bidderRequest, validBidRequests) {
     return null;
   }
 
-  return deepAccess(validBidRequests[0], 'userId.tdid') || null;
+  return getUserIdsFromEids(validBidRequests[0]).tdid;
 }
