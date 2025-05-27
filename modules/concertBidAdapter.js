@@ -21,7 +21,7 @@ export const spec = {
    *
    * @param {BidRequest} bid The bid params to validate.
    */
-  isBidRequestValid: function (bid) {
+  isBidRequestValid: function(bid) {
     if (!bid.params.partnerId) {
       logWarn('Missing partnerId bid parameter');
       return false;
@@ -37,7 +37,7 @@ export const spec = {
    * @param {Object} bidderRequest - the bidder request object
    * @return {ServerRequest} Info describing the request to the server.
    */
-  buildRequests: function (validBidRequests, bidderRequest) {
+  buildRequests: function(validBidRequests, bidderRequest) {
     logMessage(validBidRequests);
     logMessage(bidderRequest);
 
@@ -105,7 +105,7 @@ export const spec = {
    * @param {ServerResponse} serverResponse A successful response from the server.
    * @return {Bid[]} An array of bids which were nested inside the server.
    */
-  interpretResponse: function (serverResponse, bidRequest) {
+  interpretResponse: function(serverResponse, bidRequest) {
     logMessage(serverResponse);
     logMessage(bidRequest);
 
@@ -144,7 +144,7 @@ export const spec = {
   /**
    * Register bidder specific code, which will execute if bidder timed out after an auction
    */
-  onTimeout: function (data) {
+  onTimeout: function(data) {
     logMessage('concert bidder timed out');
     logMessage(data);
   },
@@ -153,7 +153,7 @@ export const spec = {
    * Register bidder specific code, which will execute if a bid from this bidder won the auction
    * @param {Bid} bid The bid that won the auction
    */
-  onBidWon: function (bid) {
+  onBidWon: function(bid) {
     logMessage('concert bidder won bid');
     logMessage(bid);
   },
