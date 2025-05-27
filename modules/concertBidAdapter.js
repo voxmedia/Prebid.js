@@ -8,7 +8,8 @@ import { getBoundingClientRect } from '../libraries/boundingClientRect/boundingC
  * @typedef {import('../src/adapters/bidderFactory.js').BidRequest} BidRequest
  * @typedef {import('../src/adapters/bidderFactory.js').Bid} Bid
  * @typedef {import('../src/adapters/bidderFactory.js').ServerResponse} ServerResponse
- * @typedef {import('../src/adapters/bidderFactory.js').validBidRequests} validBidRequests
+ * @typedef {import('../src/adapters/bidderFactory.js').ServerRequest} ServerRequest
+ * @typedef {import('../src/auction.js').BidderRequest} BidderRequest
  */
 
 const BIDDER_CODE = 'concert';
@@ -20,7 +21,7 @@ export const spec = {
    * Determines whether or not the given bid request is valid.
    *
    * @param {BidRequest} bid The bid params to validate.
-   * @return boolean True if this is a valid bid, and false otherwise.
+   * @return {boolean} True if this is a valid bid, and false otherwise.
    */
   isBidRequestValid: function(bid) {
     if (!bid.params.partnerId) {
@@ -34,9 +35,9 @@ export const spec = {
   /**
    * Make a server request from the list of BidRequests.
    *
-   * @param {validBidRequests[]} - an array of bids
-   * @param {bidderRequest} -
-   * @return ServerRequest Info describing the request to the server.
+   * @param {BidRequest[]} validBidRequests - an array of bids that have passed validation
+   * @param {BidderRequest} bidderRequest bidder request object
+   * @return {ServerRequest} Info describing the request to the server.
    */
   buildRequests: function(validBidRequests, bidderRequest) {
     logMessage(validBidRequests);
@@ -100,11 +101,13 @@ export const spec = {
       data: JSON.stringify(payload)
     };
   },
+
   /**
    * Unpack the response from the server into a list of bids.
    *
    * @param {ServerResponse} serverResponse A successful response from the server.
-   * @return {Bid[]} An array of bids which were nested inside the server.
+   * @param {ServerRequest} bidRequest Original bidRequest which generated the server response
+   * @return {Bid[]}
    */
   interpretResponse: function(serverResponse, bidRequest) {
     logMessage(serverResponse);
@@ -144,7 +147,6 @@ export const spec = {
 
   /**
    * Register bidder specific code, which will execute if bidder timed out after an auction
-   * @param {data} Containing timeout specific data
    */
   onTimeout: function(data) {
     logMessage('concert bidder timed out');
@@ -153,7 +155,7 @@ export const spec = {
 
   /**
    * Register bidder specific code, which will execute if a bid from this bidder won the auction
-   * @param {Bid} The bid that won the auction
+   * @param {Bid} bid The bid that won the auction
    */
   onBidWon: function(bid) {
     logMessage('concert bidder won bid');
@@ -168,6 +170,10 @@ export const storage = getStorageManager({bidderCode: BIDDER_CODE});
 
 /**
  * Check or generate a UID for the current user.
+ *
+ * @param {BidderRequest} bidderRequest Object containing consent data
+ * @param {BidRequest[]} validBidRequests Array of valid bid requests
+ * @return {string|boolean} User ID or false if user has opted out
  */
 function getUid(bidderRequest, validBidRequests) {
   if (hasOptedOutOfPersonalization() || !consentAllowsPpid(bidderRequest)) {
@@ -199,8 +205,8 @@ function getUid(bidderRequest, validBidRequests) {
 /**
  * Extract user IDs from the standardized userIdAsEids structure
  *
- * @param {object} bid - The bid object containing userIdAsEids
- * @returns {object} Object with extracted IDs by type
+ * @param {BidRequest} bid - The bid object containing userIdAsEids
+ * @returns {Object} Object with extracted IDs by type
  */
 function getUserIdsFromEids(bid) {
   const userIds = {
@@ -231,9 +237,7 @@ function getUserIdsFromEids(bid) {
   return userIds;
 }
 
-/**
- * Whether the user has opted out of personalization.
- */
+/** Whether the user has opted out of personalization. */
 function hasOptedOutOfPersonalization() {
   const CONCERT_NO_PERSONALIZATION_KEY = 'c_nap';
 
@@ -243,7 +247,8 @@ function hasOptedOutOfPersonalization() {
 /**
  * Whether the privacy consent strings allow personalization.
  *
- * @param {BidderRequest} bidderRequest Object which contains any data consent signals
+ * @param {BidderRequest} bidderRequest Object which contains consent data
+ * @returns {boolean} True if consent allows personalization, false otherwise
  */
 function consentAllowsPpid(bidderRequest) {
   let uspConsentAllows = true;
@@ -266,12 +271,24 @@ function consentAllowsPpid(bidderRequest) {
   return (uspConsentAllows && gdprConsentAllows);
 }
 
+/**
+ * Collect extended ID data from bid and add to eids array
+ *
+ * @param {Array} eids Array to store extended IDs
+ * @param {BidRequest} bid Bid request object containing userIdAsEids
+ */
 function collectEid(eids, bid) {
   if (bid.userIdAsEids && Array.isArray(bid.userIdAsEids) && bid.userIdAsEids.length > 0) {
     eids.push(...bid.userIdAsEids);
   }
 }
 
+/**
+ * Get offset coordinates for an element
+ *
+ * @param {HTMLElement} el The element to get offset for
+ * @returns {Object|undefined} Object with left and top coordinates or undefined
+ */
 function getOffset(el) {
   if (el) {
     const rect = getBoundingClientRect(el);
@@ -282,6 +299,13 @@ function getOffset(el) {
   }
 }
 
+/**
+ * Get Trade Desk ID from the bid requests
+ *
+ * @param {BidderRequest} bidderRequest Object containing consent data
+ * @param {BidRequest[]} validBidRequests Array of valid bid requests
+ * @returns {string|null} Trade Desk ID or null if not available
+ */
 function getTdid(bidderRequest, validBidRequests) {
   if (hasOptedOutOfPersonalization() || !consentAllowsPpid(bidderRequest)) {
     return null;
