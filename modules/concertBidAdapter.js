@@ -216,9 +216,7 @@ function getUserIdsFromEids(bid) {
 function hasOptedOutOfPersonalization() {
   const CONCERT_NO_PERSONALIZATION_KEY = 'c_nap';
 
-  return (
-    storage.getDataFromLocalStorage(CONCERT_NO_PERSONALIZATION_KEY) === 'true'
-  );
+  return storage.getDataFromLocalStorage(CONCERT_NO_PERSONALIZATION_KEY) === 'true';
 }
 
 /**
